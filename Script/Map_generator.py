@@ -3,13 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Carica il file GeoJSON
-lombardia = gpd.read_file(r"C:\Users\JoaquimFrancalanci\Downloads\Province_Italy.geojson")
+lombardia = gpd.read_file("Map/Province_Italy.geojson")
 
-# Carica il dataset con la popolazione
-population_data = pd.DataFrame({
-    'province': ['Milano', 'Bergamo', 'Brescia', 'Como', ...],  # Province lombarde
-    'population': [1378689, 1103261, 1265805, 591958, ...]  # Popolazione per provincia
-})
+# Carica il dataset con la popolazione da Excel
+population_data = pd.read_excel(r"C:\Users\JoaquimFrancalanci\OneDrive - ITS Angelo Rizzoli\Desktop\Progetti\Instagram\Dataset\Lombadia 2024.xlsx", sheet_name="Sheet 1")
 
 # Unisci i dati geografici con i dati della popolazione
 lombardia = lombardia.merge(population_data, left_on="name", right_on="province")
