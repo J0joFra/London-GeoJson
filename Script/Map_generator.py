@@ -12,18 +12,26 @@ population_data = pd.read_excel(r"C:\Users\JoaquimFrancalanci\OneDrive - ITS Ang
 # Unisci i dati geografici con i dati della popolazione
 lombardia = lombardia.merge(population_data, left_on="name", right_on="Provincia")
 
+# Definire i bin ogni 500k persone
+bin_width = 500000
+population_bins = pd.cut(lombardia['Popolazione'], 
+                         bins=range(0, lombardia['Popolazione'].max() + bin_width, bin_width), 
+                         right=False, labels=False)
+
+# Aggiungi la colonna con i bin alla geodataframe
+lombardia['Population_Bin'] = population_bins
+
 # Crea la figura e l'oggetto ax
 fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
-# Definisci il gradiente di colore personalizzato
+# Definisci il gradiente di colore dal verde chiaro al verde scuro
 cmap = colors.LinearSegmentedColormap.from_list(
-    'custom_green', ['#BCE784', '#006400'], N=256
-)
+    'green_gradient', ['#BCE784', '#9EF01A', '#69C720', '#006400', '#004B23'], N=256)
 
-# Plotta la mappa colorata con il bordo nero
-lombardia.plot(column='Popolazione', cmap=cmap, legend=True, ax=ax,
+# Plotta la mappa colorata con il bordo nero, suddivisa nei bin
+lombardia.plot(column='Population_Bin', cmap=cmap, legend=True, ax=ax,
                legend_kwds={'label': "Popolazione (Milioni)", 'orientation': "horizontal"},
-               edgecolor='black')  # Aggiungi il bordo nero
+               edgecolor='black')
 
 # Rimuovi gli assi
 ax.set_axis_off()
@@ -42,24 +50,15 @@ def calculate_luminance(color):
 
 # Aggiungi le abbreviazioni delle province con colore dinamico (bianco o nero)
 for idx, row in lombardia.iterrows():
-    # Recupera il centroide della provincia per posizionare l'abbreviazione
     x, y = row['geometry'].centroid.coords[0]
     abbreviation = abbreviations.get(row['name'], '')
-    
-    # Ottieni il colore del poligono (background)
-    color = cmap(row['Popolazione'] / lombardia['Popolazione'].max())[:3]  # Normalizza il valore della popolazione
-    luminance = calculate_luminance(color)
-    
-    # Scegli il colore dell'abbreviazione (bianco se il fondo è scuro, nero se chiaro)
+
+    # Calcola il colore per il bin di popolazione
+    bin_color = cmap(row['Population_Bin'] / 5)[:3]  # Normalizza al massimo valore del bin (5 bin)
+    luminance = calculate_luminance(bin_color)
     text_color = 'white' if luminance < 0.5 else 'black'
     
+    # Aggiungi il testo con l'abbreviazione
     ax.text(x, y, abbreviation, fontsize=8, ha='center', color=text_color)
 
-# Titolo
-plt.title("Popolazione per Provincia in Lombardia", fontsize=16)
-
-# Mostra la mappa
 plt.show()
-
-
-
